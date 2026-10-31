@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voluntold · BNHR training tools</title>
+<meta name="description" content="Nobody volunteered, so somebody gets voluntold: paste the names or load a file, and pick one at random.">
+<link rel="canonical" href="https://bnhr.xyz/training-tools/voluntold/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BNHR">
+<meta property="og:title" content="Voluntold">
+<meta property="og:description" content="Nobody volunteered, so somebody gets voluntold: paste the names or load a file, and pick one at random.">
+<meta property="og:url" content="https://bnhr.xyz/training-tools/voluntold/">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="fonts.css">
+<style>
+  /* BNHR 2026 brand: core-light on a light system, core-dark on a dark one (tokens from branding/web-2026/tokens.css).
+     Navy header and straight footer band, Albert Sans 800 headlines, Atkinson Hyperlegible Next text, Atkinson
+     Hyperlegible Mono labels, and the highlight: navy on the orange block, its full stop outside. */
+  :root {
+    --navy: #0c2340;
+    --paper: #f5f5f5;
+    --orange: #ffa500;
+    --hazard: #ffd400;
+
+    --bg: #f5f5f5;
+    --surface: #ffffff;
+    --ink: #0c2340;
+    --muted: #23324a;
+    --subtle: #4a5a70;
+    --rule: #c2c7cd;
+    --hair: #d9dcdf;
+    --band: #0c2340;
+    --focus: #0c2340;
+    --tint: #ebeef2;
+
+    --display: "Albert Sans", Arial, sans-serif;
+    --text: "Atkinson Hyperlegible Next", Arial, sans-serif;
+    --mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c2340;
+      --surface: #10294a;
+      --ink: #f5f5f5;
+      --muted: #d3dbe6;
+      --subtle: #a3b3c9;
+      --rule: #3f5168;
+      --hair: #283c56;
+      --band: #10294a;
+      --focus: #ffa500;
+      --tint: #15335a;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+    background: var(--bg); color: var(--ink);
+    font-family: var(--text); font-size: 17px; line-height: 1.5;
+  }
+  button, input, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  a { color: inherit; text-decoration-color: var(--orange); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+  /* The highlight: navy words on the orange block */
+  em.hl, h1 em {
+    font-style: normal; color: var(--navy); background: var(--orange);
+    padding: 0 0.12em; border-radius: 0.12em;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  }
+
+  /* Header: the horizontal logo on navy, and the way back to the other tools */
+  .topbar { background: var(--navy); color: var(--paper); padding: 12px 16px; }
+  .topbar .inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .topbar img { display: block; height: 36px; width: auto; }
+  .topbar nav a { color: var(--paper); text-decoration: none; font-weight: 700; padding: 4px 0; border-bottom: 2px solid var(--orange); }
+  .topbar :focus-visible, .band :focus-visible { outline-color: var(--orange); }
+
+  main { flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 16px 48px; }
+
+  .kicker {
+    font-family: var(--mono); font-weight: 500; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--subtle); margin: 0 0 8px;
+  }
+  h1 {
+    font-family: var(--display); font-weight: 800; font-size: clamp(2rem, 4.6vw, 3.1rem);
+    letter-spacing: -0.03em; line-height: 1.08; margin: 0 0 12px; max-width: 18em; text-wrap: balance;
+  }
+  .lead { margin: 0 0 28px; color: var(--muted); font-size: 1.1rem; max-width: 40em; }
+
+  .workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 20px; align-items: start; }
+  .panel {
+    background: var(--surface); border-radius: var(--radius); box-shadow: 0 0 0 2px var(--hair);
+    padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0;
+  }
+  .panel h2 { margin: 0; }
+
+  /* Names: type or paste, or load a file */
+  .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--hair); }
+  .tabs button {
+    background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -2px;
+    padding: 8px 12px; font-weight: 700; color: var(--subtle); cursor: pointer;
+  }
+  .tabs button:hover { color: var(--ink); }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--orange); }
+  .tab-panel { display: flex; flex-direction: column; }
+  .tab-panel[hidden] { display: none; }
+
+  textarea {
+    width: 100%; min-height: 300px; resize: vertical;
+    background: var(--bg); border: 2px solid var(--rule); border-radius: 10px;
+    padding: 12px 14px; font-size: 1.1rem; line-height: 1.7;
+  }
+  textarea:focus-visible { outline: none; border-color: var(--focus); box-shadow: 0 0 0 1px var(--focus); }
+  textarea::placeholder { color: var(--subtle); opacity: 0.8; }
+  textarea[readonly] { opacity: 0.7; }
+
+  .drop-zone {
+    position: relative; min-height: 300px; padding: 24px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center;
+    background: var(--bg); border: 2px dashed var(--rule); border-radius: 10px; cursor: pointer;
+  }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--ink); background: var(--tint); }
+  .drop-zone:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .drop-zone input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+  .drop-zone svg { width: 44px; height: 44px; pointer-events: none; }
+  .drop-zone .icon-error { display: none; }
+  .drop-zone.error .icon-file { display: none; }
+  .drop-zone.error .icon-error { display: block; }
+  .drop-text { font-family: var(--display); font-weight: 700; font-size: 1.2rem; pointer-events: none; }
+  .drop-sub { color: var(--subtle); pointer-events: none; }
+
+  .name-count { margin: 0; font-family: var(--mono); font-size: 0.9rem; color: var(--subtle); text-align: right; }
+  .name-count strong { color: var(--ink); font-weight: 500; }
+
+  .options { display: flex; flex-wrap: wrap; gap: 8px 20px; border: 0; margin: 0; padding: 0; }
+  .option { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+  .option input { width: 18px; height: 18px; margin: 0; accent-color: var(--ink); cursor: pointer; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; }
+  .btn {
+    border: 2px solid transparent; border-radius: 10px; padding: 12px 22px; cursor: pointer;
+    font-family: var(--display); font-weight: 800; font-size: 1.15rem; letter-spacing: -0.01em;
+  }
+  .btn-pick { flex: 1; background: var(--orange); color: var(--navy); }
+  .btn-pick:hover:not(:disabled) { box-shadow: inset 0 0 0 2px var(--navy); }
+  .btn-pick:disabled { background: var(--hair); color: var(--subtle); cursor: not-allowed; }
+  .btn-reset { background: transparent; color: var(--ink); border-color: var(--rule); }
+  .btn-reset:hover { border-color: var(--ink); }
+  .hint { margin: 0; font-size: 0.9rem; color: var(--subtle); }
+  kbd { font-family: var(--mono); font-size: 0.85em; padding: 1px 6px; border: 1.5px solid var(--rule); border-bottom-width: 3px; border-radius: 6px; }
+
+  /* Result: big enough to read on a projector at the back of the room */
+  .result-box {
+    min-height: 260px; padding: 28px 20px; border-radius: 10px;
+    background: var(--bg); box-shadow: inset 0 0 0 2px var(--hair);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center;
+  }
+  .result-box.picked { box-shadow: inset 0 0 0 3px var(--orange); }
+  .result-placeholder { margin: 0; font-family: var(--display); font-weight: 700; font-size: 1.6rem; color: var(--subtle); }
+  .result-label { margin: 0; }
+  .result-name {
+    margin: 0; max-width: 100%; overflow-wrap: anywhere;
+    font-family: var(--display); font-weight: 800; font-size: clamp(2.4rem, 6vw, 5rem); letter-spacing: -0.035em; line-height: 1.25;
+  }
+  .result-box.picked .result-name span {
+    color: var(--navy); background: var(--orange); padding: 0 0.14em; border-radius: 0.1em;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  }
+  .result-box.rolling .result-name { color: var(--subtle); }
+
+  .picked-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .picked-list { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow-y: auto; }
+  .picked-list li { display: flex; align-items: center; gap: 12px; padding: 6px 4px; border-bottom: 1px solid var(--hair); animation: arrive 0.25s ease; }
+  .picked-list li:last-child { border-bottom: 0; }
+  .pick-num { font-family: var(--mono); font-size: 0.85rem; color: var(--subtle); min-width: 2.2em; text-align: right; }
+  .pick-name { flex: 1; font-weight: 700; overflow-wrap: anywhere; }
+  .pick-remove {
+    background: none; border: 0; border-radius: 6px; width: 32px; height: 32px; cursor: pointer;
+    color: var(--subtle); font-size: 1.3rem; line-height: 1;
+  }
+  .pick-remove:hover { color: var(--ink); background: var(--tint); }
+  .picked-empty { margin: 0; color: var(--subtle); }
+  @keyframes arrive { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+
+  /* Footer: the straight band, with the square logo, bnhr.xyz and the tagline */
+  .band { background: var(--band); color: var(--paper); padding: 20px 16px; margin-top: 16px; }
+  .band .inner { max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+  .band img { display: block; height: 56px; width: auto; }
+  .band .site { font-family: var(--display); font-weight: 800; font-size: 1.15rem; color: var(--paper); text-decoration: none; }
+  .band .tagline { font-family: var(--display); font-weight: 700; font-size: 1.1rem; text-transform: lowercase; }
+  .band .tagline em { font-style: normal; color: var(--navy); background: var(--orange); padding: 0 0.12em; border-radius: 0.12em; }
+
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  @media (max-width: 860px) {
+    .workspace { grid-template-columns: 1fr; }
+    textarea, .drop-zone { min-height: 180px; }
+    .result-box { min-height: 160px; }
+    .picked-list { max-height: 220px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .picked-list li { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="inner">
+    <a href="https://bnhr.xyz/"><img src="logo-on-navy.svg" alt="BNHR" width="982" height="391"></a>
+    <nav aria-label="BNHR training tools"><a href="../">Training tools</a></nav>
+  </div>
+</header>
+
+<main>
+  <p class="kicker">Training tools</p>
+  <h1>Nobody volunteered, so somebody gets <em>voluntold</em>.</h1>
+  <p class="lead">Type or paste the names, or load a file, then pick. Someone's day just changed. The names stay on this device: the page never sends or saves them.</p>
+
+  <div class="workspace">
+
+    <section class="panel" aria-labelledby="names-heading">
+      <h2 class="kicker" id="names-heading">Names, one per line</h2>
+
+      <div class="tabs" role="tablist" aria-labelledby="names-heading">
+        <button type="button" role="tab" id="tab-type" aria-controls="panel-type" aria-selected="true">Type or paste</button>
+        <button type="button" role="tab" id="tab-file" aria-controls="panel-file" aria-selected="false" tabindex="-1">Load from a file</button>
+      </div>
+
+      <div class="tab-panel" id="panel-type" role="tabpanel" aria-labelledby="tab-type">
+        <label class="visually-hidden" for="names-input">Names, one per line</label>
+        <textarea id="names-input" placeholder="Alice&#10;Bayani&#10;Carmela&#10;Dante&#10;Eli" spellcheck="false" autocomplete="off"></textarea>
+      </div>
+
+      <div class="tab-panel" id="panel-file" role="tabpanel" aria-labelledby="tab-file" hidden>
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="file-input" accept=".txt,text/plain" aria-describedby="drop-sub">
+          <svg class="icon-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5M8.5 12.5h7M8.5 16h5"/></svg>
+          <svg class="icon-error" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20.5h20z" fill="#ffd400" stroke="#0c2340" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 9.5v5" stroke="#0c2340" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.4" r="1.15" fill="#0c2340"/></svg>
+          <div class="drop-text" id="drop-text" aria-live="polite">Drop a .txt file here</div>
+          <div class="drop-sub" id="drop-sub">or click to choose one: a plain text file, one name per line</div>
+        </div>
+      </div>
+
+      <p class="name-count" id="name-count">0 names</p>
+
+      <fieldset class="options">
+        <legend class="visually-hidden">Options</legend>
+        <label class="option"><input type="checkbox" id="opt-remove" checked> Take picked names out of the draw</label>
+        <label class="option"><input type="checkbox" id="opt-shuffle"> Shuffle before picking</label>
+      </fieldset>
+
+      <div class="controls">
+        <button type="button" class="btn btn-pick" id="btn-pick" disabled>Pick someone</button>
+        <button type="button" class="btn btn-reset" id="btn-reset" title="Clear the picked list and put every name back in the draw">Reset</button>
+      </div>
+      <p class="hint"><kbd>Enter</kbd> or <kbd>Space</kbd> picks too, when you're not typing in the names.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="result-heading">
+      <h2 class="kicker" id="result-heading">Result</h2>
+
+      <div class="result-box" id="result-box" aria-live="polite">
+        <p class="result-placeholder" id="result-placeholder">Waiting…</p>
+        <p class="kicker result-label" id="result-label" hidden>Voluntold</p>
+        <p class="result-name" id="result-name" hidden><span></span></p>
+      </div>
+
+      <div class="picked-head">
+        <h2 class="kicker" id="picked-heading">Already picked</h2>
+      </div>
+      <p class="picked-empty" id="picked-empty">No one picked yet.</p>
+      <ol class="picked-list" id="picked-list" aria-labelledby="picked-heading"></ol>
+    </section>
+
+  </div>
+</main>
+
+<footer class="band">
+  <div class="inner">
+    <img src="logo-square-on-navy.svg" alt="BNHR">
+    <a class="site" href="https://bnhr.xyz/">bnhr.xyz</a>
+    <span class="tagline">less lock-in. more <em>know-how</em>.</span>
+  </div>
+</footer>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const namesInput = $('names-input');
+  const countEl = $('name-count');
+  const btnPick = $('btn-pick');
+  const btnReset = $('btn-reset');
+  const resultBox = $('result-box');
+  const resultPh = $('result-placeholder');
+  const resultLbl = $('result-label');
+  const resultName = $('result-name');
+  const resultText = resultName.querySelector('span');
+  const pickedList = $('picked-list');
+  const pickedEmpty = $('picked-empty');
+  const optRemove = $('opt-remove');
+  const optShuffle = $('opt-shuffle');
+  const fileInput = $('file-input');
+  const dropZone = $('drop-zone');
+  const dropText = $('drop-text');
+  const dropSub = $('drop-sub');
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+
+  const SHUFFLE_MS = 1400;
+  const SHUFFLE_STEP_MS = 80;
+  const DROP_TEXT = dropText.textContent;
+  const DROP_SUB = dropSub.textContent;
+
+  let pickedNames = [];
+  const removedSet = new Set();
+  let shuffleTimer = null;   // set only while a shuffle runs, so a pick can't start on top of one
+  let dropTimer = null;
+
+  // ── Tabs ──
+  function switchToTab(tab, focus) {
+    for (const t of tabs) {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).hidden = !on;
+    }
+    if (focus) tab.focus();
+  }
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => switchToTab(tab));
+    tab.addEventListener('keydown', e => {
+      const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+      if (!step) return;
+      e.preventDefault();
+      switchToTab(tabs[(i + step + tabs.length) % tabs.length], true);
+    });
+  });
+
+  // ── Names always come from the text box; each name counts once ──
+  function getNames() {
+    return [...new Set(namesInput.value.split(/\r?\n/).map(n => n.trim()).filter(Boolean))];
+  }
+
+  function getPool() {
+    const all = getNames();
+    return optRemove.checked ? all.filter(n => !removedSet.has(n)) : all;
+  }
+
+  function updateUI() {
+    const all = getNames();
+    const pool = getPool();
+    const showRemaining = optRemove.checked && pool.length !== all.length;
+
+    countEl.innerHTML = `<strong>${all.length}</strong> name${all.length === 1 ? '' : 's'}`
+      + (showRemaining ? ` · <strong>${pool.length}</strong> left in the draw` : '');
+
+    btnPick.disabled = shuffleTimer !== null || pool.length === 0;
+    btnPick.textContent = all.length > 0 && pool.length === 0 ? 'Everyone picked' : 'Pick someone';
+  }
+
+  // ── File loading: fills the text box and switches back to it ──
+  function loadFile(file) {
+    if (!file || !(file.type === 'text/plain' || /\.txt$/i.test(file.name))) {
+      showDropError('Please use a .txt file');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const lines = String(reader.result).split(/\r?\n/).map(n => n.trim()).filter(Boolean);
+      if (lines.length === 0) {
+        showDropError('That file is empty');
+        return;
+      }
+      namesInput.value = lines.join('\n');
+      resetDropZone();
+      switchToTab(tabs[0]);
+      namesInput.focus();
+      updateUI();
+    };
+    reader.onerror = () => showDropError("Couldn't read that file");
+    reader.readAsText(file);
+  }
+
+  function showDropError(msg) {
+    clearTimeout(dropTimer);
+    dropZone.classList.add('error');
+    dropText.textContent = msg;
+    dropSub.textContent = 'Try another file.';
+    fileInput.value = '';
+    dropTimer = setTimeout(resetDropZone, 3000);
+  }
+
+  function resetDropZone() {
+    clearTimeout(dropTimer);
+    dropZone.classList.remove('drag-over', 'error');
+    dropText.textContent = DROP_TEXT;
+    dropSub.textContent = DROP_SUB;
+    fileInput.value = '';
+  }
+
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+  });
+
+  // ── Picked list ──
+  function renderPicked() {
+    pickedList.replaceChildren(...pickedNames.map((name, i) => {
+      const li = document.createElement('li');
+      const num = document.createElement('span');
+      num.className = 'pick-num';
+      num.textContent = `${i + 1}.`;
+      const nm = document.createElement('span');
+      nm.className = 'pick-name';
+      nm.textContent = name;
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'pick-remove';
+      rm.dataset.index = i;
+      rm.textContent = '×';
+      rm.title = 'Take off the picked list';
+      rm.setAttribute('aria-label', `Take ${name} off the picked list`);
+      li.append(num, nm, rm);
+      return li;
+    }));
+    pickedEmpty.hidden = pickedNames.length > 0;
+    pickedList.scrollTop = pickedList.scrollHeight;
+  }
+
+  pickedList.addEventListener('click', e => {
+    const btn = e.target.closest('.pick-remove');
+    if (!btn) return;
+    const [name] = pickedNames.splice(Number(btn.dataset.index), 1);
+    if (!pickedNames.includes(name)) removedSet.delete(name);
+    renderPicked();
+    updateUI();
+  });
+
+  // ── Pick ──
+  const randomFrom = list => list[Math.floor(Math.random() * list.length)];
+
+  function showName(name, state) {
+    resultPh.hidden = true;
+    resultLbl.hidden = false;
+    resultName.hidden = false;
+    resultText.textContent = name;
+    resultBox.classList.toggle('rolling', state === 'rolling');
+    resultBox.classList.toggle('picked', state === 'picked');
+    resultBox.setAttribute('aria-busy', String(state === 'rolling'));
+  }
+
+  function stopShuffle() {
+    clearInterval(shuffleTimer);
+    shuffleTimer = null;
+    namesInput.readOnly = false;
+  }
+
+  function land(name) {
+    stopShuffle();
+    showName(name, 'picked');
+    if (optRemove.checked) removedSet.add(name);
+    pickedNames.push(name);
+    renderPicked();
+    updateUI();
+  }
+
+  function pick() {
+    const pool = getPool();
+    if (shuffleTimer !== null || pool.length === 0) return;
+    const chosen = randomFrom(pool);
+    if (!optShuffle.checked) {
+      land(chosen);
+      return;
+    }
+    // The names are fixed while the shuffle runs, so what it lands on is still in the list
+    namesInput.readOnly = true;
+    showName(randomFrom(pool), 'rolling');
+    let elapsed = 0;
+    shuffleTimer = setInterval(() => {
+      elapsed += SHUFFLE_STEP_MS;
+      if (elapsed >= SHUFFLE_MS) land(chosen);
+      else showName(randomFrom(pool), 'rolling');
+    }, SHUFFLE_STEP_MS);
+    updateUI();
+  }
+
+  // ── Reset ──
+  function reset() {
+    stopShuffle();
+    pickedNames = [];
+    removedSet.clear();
+    resultPh.hidden = false;
+    resultLbl.hidden = true;
+    resultName.hidden = true;
+    resultText.textContent = '';
+    resultBox.classList.remove('picked', 'rolling');
+    resultBox.removeAttribute('aria-busy');
+    renderPicked();
+    updateUI();
+  }
+
+  namesInput.addEventListener('input', updateUI);
+  optRemove.addEventListener('change', updateUI);
+  btnPick.addEventListener('click', pick);
+  btnReset.addEventListener('click', reset);
+
+  // Enter or Space picks from anywhere on the page, but never takes those keys from a control that has them
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.repeat || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.target.closest('input, textarea, select, button, a, [contenteditable]')) return;
+    e.preventDefault();
+    pick();
+  });
+
+  renderPicked();
+  updateUI();
+</script>
+</body>
+</html>
