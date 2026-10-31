@@ -2,6 +2,10 @@
 
 Small tools for running a training session, published with GitHub Pages at https://bnhr.xyz/training-tools/.
 
+## In the learning factory
+
+This repository holds the factory's **tools for the room**: small tools a facilitator uses in a session, with no course or training data in them. One of the repositories of BNHR's learning factory, beside the hub, [`learn-factory`](https://github.com/benhur07b/learn-factory) (private; its README's *The learning factory* has the model and every repository's role). It reads nothing from the others; a training's room kit copies the tools it needs. Its addresses (`bnhr.xyz/training-tools/<tool>/`) are given out in sessions, so a tool's folder keeps its name.
+
 ## Layout
 
 One folder per tool, named after the tool, so its address is `https://bnhr.xyz/training-tools/<folder>/`. Tool folders carry no date, unlike workshops, because a tool is used again and again. Each folder is self-contained, with its own fonts, logos and icon, so a change to one tool or to the brand never changes another.
