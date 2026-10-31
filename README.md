@@ -10,7 +10,7 @@ One folder per tool, named after the tool, so its address is `https://bnhr.xyz/t
 |---|---|
 | `voluntold/` | Voluntold: picks a name at random from a list typed, pasted or loaded from a `.txt` file, keeps the picked names out of the draw, and lists who has been picked. Enter or Space picks when the cursor isn't in the names. First made for the Learn Geospatial Data Management and Engineering course (`tools/voluntold.html` there) |
 
-`index.html` lists the tools: add a line there for each new folder. `assets/` holds the index page's logos, icon and fonts. `.nojekyll` tells GitHub Pages to serve the files as they are.
+`index.html` lists the tools: add a line there for each new folder. `assets/` holds the index page's logos, icon and fonts. `.nojekyll` tells GitHub Pages to serve the files as they are. `LICENSE`, `LICENSES/` and `REUSE.toml` say who owns each file and under what license (see *License* below).
 
 ## Brand
 
@@ -23,3 +23,11 @@ The tools run in the browser and send nothing anywhere: no accounts, no analytic
 ## Publishing
 
 Pushes to `main` publish the site (Settings → Pages → Deploy from a branch: `main`, root). The site takes the `bnhr.xyz` custom domain from the main site, `benhur07b.github.io`, so it needs no CNAME file of its own; add `training-tools` to that site's `reserved-paths.json`.
+
+## License
+
+The code and the documentation are © 2026 Ben Hur S. Pintor and licensed under the [GNU General Public License, version 2 or (at your option) any later version](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html) (`LICENSE`).
+
+The BNHR name and logos are not covered by this license: all rights reserved. The fonts are under the SIL Open Font License 1.1, with each font's license beside it in its `fonts/` folder.
+
+`REUSE.toml` names the owner and license of every file, and `LICENSES/` holds the license texts. `uvx reuse lint` checks that every file has one. A third-party file added to the repository adds an entry for it there.
